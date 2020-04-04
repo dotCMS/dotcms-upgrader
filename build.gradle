@@ -1,5 +1,5 @@
 // Apply the java plugin to add support for Java
-apply plugin: 'java'
+apply plugin: 'application'
 
 // Compile Java.
 compileJava {
@@ -7,18 +7,124 @@ compileJava {
     sourceCompatibility = 1.8
     options.incremental = true
 }
+configurations {
+    pluginLibs
+    ajc
+    provided
+    aspects
+    ajInpath
+}
+project.ext {
+    aspectjVersion = '1.8.10'
+}
+
 
 // In this section you declare where to find the dependencies of your project
 repositories {
-    maven { url "http://repo.dotcms.com/artifactory/libs-release" }
+    maven { url "https://repo.dotcms.com/artifactory/libs-release" }
 }
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
     compileOnly fileTree(dir: 'lib', include: '*.jar')
-    compileOnly (group: 'com.dotcms', name: 'dotcms', version: '5.2.7'){
-        transitive = true
+    compile (group: 'com.dotcms', name: 'dotcms', version: '5.2.7'){
+        transitive = false
     }
+
+    compile (group: 'com.oracle.jdbc', name: 'ojdbc8', version: '19.3') {
+        transitive = false
+    }
+    compile (group: 'org.postgresql', name: 'postgresql', version: '42.2.8') {
+        transitive = false
+    }
+    compile (group: 'mysql', name: 'mysql-connector-java', version: '8.0.18') {
+        transitive = false
+    }
+    compile (group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.4.1.jre8') {
+        transitive = false
+    }
+    compile (group: 'com.dotcms.lib', name: 'dot.struts', version:'1.2.10_1'){
+        transitive = false
+    }
+    compile group: 'com.dotcms.lib', name: 'dot.google', version:'ukv_2'
+    compile group: 'com.dotcms.lib', name: 'dot.guava', version:'11.0.1_2'
+    compile 'org.apache.logging.log4j:log4j-web:2.8.2'
+    compile 'commons-logging:commons-logging:1.2'
+    
+    compile "org.mockito:mockito-core:1.+"
+     compile "javax.servlet:javax.servlet-api:3.1.0"
+        compile (group: 'commons-configuration', name: 'commons-configuration', version: '1.10'){
+        transitive = false
+    }
+    compile group: 'com.dotcms.lib', name: 'dot.commons-io', version:'2.0.1_2'
+    compile group: 'com.lmax', name: 'disruptor', version: '3.3.4'
+    compile (group: 'commons-configuration', name: 'commons-configuration', version: '1.10'){
+        transitive = false
+    }
+    compile (group: 'commons-lang', name: 'commons-lang', version: '2.6'){
+        transitive = false
+    }
+    compile (group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'){
+        transitive = false
+    }
+    compile group: 'com.dotcms.lib', name: 'dot.jettison', version:'1.1_2'
+    ajc     'org.aspectj:aspectjtools:1.8.10'
+    
+    compile 'org.aspectj:aspectjrt:1.8.10'
+
+    aspects (group: 'com.dotcms', name: 'dotcms', version: '5.2.7')
+     compile (group: 'commons-collections', name: 'commons-collections', version: '3.2.2'){
+        transitive = false
+    }
+        
+}
+
+task compileAjc(overwrite: true) {
+
+    // Declare the output directory to enable uptodate checks
+    outputs.dir sourceSets.main.output.classesDir
+
+    doLast{
+        // Resolve the AspectJ compiler via dependencies of the ajc configuration
+        ant.taskdef( resource:"org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties", classpath: configurations.ajc.asPath)
+        ant.iajc(source:"1.8", target:"1.8",
+                destDir:sourceSets.main.output.classesDir,
+                maxmem:"512m",
+                fork:"true",
+                // Jars containing aspects to be woven should be declared in the aspects configuration
+                aspectPath:configurations.aspects?.asPath,
+                // Jars containing classes where aspects should be woven into should be declared in the ajInpath configuration
+                inpath:configurations.ajInpath?.asPath,
+                // Define the compile classpath to include a deps of a 'provided' configuration
+                classpath:configurations.compile.asPath + configurations.provided.asPath){
+
+            sourceroots{
+                sourceSets.main.java.srcDirs.each{
+                    // The aspectJ compiler does not like nonexisting source roots, so check if they exist
+                    if (it.exists()) {
+                        pathelement(location:it.absolutePath)
+                    }
+                }
+            }
+
+        }
+    }
+}
+processResources.dependsOn(compileAjc)
+jar {
+    zip64 = true
+    manifest {
+        attributes 'Implementation-Title': 'dotCMS Upgrader',
+                   'Implementation-Version': '1.0',
+                   'Main-Class': 'com.dotcms.upgrade.Upgrade'
+    }
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+  }{
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
+  }
 }
 
 sourceSets {

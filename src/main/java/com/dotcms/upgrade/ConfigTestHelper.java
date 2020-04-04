@@ -38,10 +38,8 @@ public class ConfigTestHelper extends Config {
             Mockito.when(context.getAttribute(Globals.MODULE_KEY)).thenReturn(config);
             
             // Set up language.properties files
-            final MultiMessageResources messages = (MultiMessageResources) new MultiMessageResourcesFactory().createResources("messages.Language,messages.Language-ext,messages.cms_language");
-            messages.setServletContext(context);
-            WebAppPool.put("dotcms.org", Globals.MESSAGES_KEY, messages);
-            Mockito.when(context.getAttribute(Globals.MESSAGES_KEY)).thenReturn(messages);
+            
+
 
             final String topPath = Files.createTempDir().getCanonicalPath();
             Mockito.when(context.getRealPath(Matchers.anyString())).thenAnswer(new Answer<String>() {
@@ -87,20 +85,13 @@ public class ConfigTestHelper extends Config {
 
         }
 
-        props = null;
+
         dotmarketingPropertiesUrl = getUrlToTestResource("it-dotmarketing-config.properties");
         clusterPropertiesUrl = getUrlToTestResource("it-dotcms-config-cluster.properties");
-        setToolboxPath();
+
     }
 
-    private static void setToolboxPath() throws IOException {
-        String toolboxManagerPath = Config.getStringProperty("TOOLBOX_MANAGER_PATH");
-        File toolboxManager= new File(toolboxManagerPath);
-        if(toolboxManager.exists()){
-          Mockito.when(Config.CONTEXT.getResourceAsStream(toolboxManagerPath)).thenReturn(
-                  java.nio.file.Files.newInputStream(Paths.get(toolboxManagerPath)));
-        }
-    }
+
 
     /**
      * URL to known resource on the test-resources path, now on "bin"

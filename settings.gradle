@@ -16,4 +16,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'plugin-com.dotcms.upgradetask'
+rootProject.name = 'dotcms-upgrader'

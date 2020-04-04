@@ -1,55 +1,79 @@
 package com.dotcms.upgrade;
 
-import com.dotcms.config.DotInitializationService;
-import com.dotmarketing.business.APILocator;
-import com.dotmarketing.business.CacheLocator;
-import com.dotmarketing.business.FactoryLocator;
-import com.dotmarketing.util.Config;
-import com.dotmarketing.util.Logger;
-import com.liferay.util.SystemProperties;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
+import com.dotmarketing.exception.DotRuntimeException;
 
 /**
  * Sets up the web environment needed to execute integration
  */
 public class InitService {
 
-    private static InitService service = new InitService();
 
-    private static final AtomicBoolean initCompleted = new AtomicBoolean(false);
 
-    static {
-        SystemProperties.getProperties();
-    }
+    private static final String PROPERTY_FILE_NAME = "upgrade.properties";
 
-    private InitService() {
-    }
 
-    public static InitService getInstance() {
-        return service;
-    }
-
-    public void init() throws Exception {
+    public static void init() {
         try {
-            if (initCompleted.compareAndSet(false, true)) {
-                ConfigTestHelper._setupFakeTestingContext();
-
-                CacheLocator.init();
-                FactoryLocator.init();
-                APILocator.init();
-                Config.initializeConfig();
-                //For these tests fire the reindex immediately
-                Config.setProperty("ASYNC_REINDEX_COMMIT_LISTENERS", false);
-                Config.setProperty("ASYNC_COMMIT_LISTENERS", false);
-
-                Config.setProperty("NETWORK_CACHE_FLUSH_DELAY", (long) 0);
-                // Init other dotCMS services.
-                DotInitializationService.getInstance().initialize();
-            }
-        } catch(Exception e) {
-            Logger.error(this, "Error initializing Integration Test Init Service", e);
+            new InitService();
+        } catch (Exception e) {
+            throw new DotRuntimeException(e);
         }
+    }
+
+    public InitService() throws Exception {
+        ConfigTestHelper._setupFakeTestingContext();
+        
+        Properties properties = new Properties();
+
+        File propFile = new File(PROPERTY_FILE_NAME);
+
+        if (!propFile.exists()) {
+            System.out.println("Cannot find            :" + propFile.getAbsolutePath());
+            propFile = new File(new File(InitService.class.getProtectionDomain().getCodeSource().getLocation().toURI())
+                            .getParentFile(), PROPERTY_FILE_NAME);
+            System.out.println("Trying                 :" + propFile.getAbsolutePath());
+        }
+        if (propFile.exists()) {
+            System.out.println("Loading props from     :" + propFile.getAbsolutePath());
+            try (InputStream in = new FileInputStream(propFile)) {
+                properties.load(in);
+            }
+
+        } else {
+            System.out.println(" Falling back to default:" + PROPERTY_FILE_NAME);
+            try (InputStream in = InitService.class.getResourceAsStream(PROPERTY_FILE_NAME)) {
+                properties.load(in);
+            }
+        }
+        System.out.println("");
+
+        for(Object key : properties.keySet()) {
+            System.setProperty((String) key, properties.getProperty((String) key));
+        }
+        
+
+
+
+    }
+
+
+
+    public static String getProperty(String key, String defaultValue) {
+        String x = System.getProperty(key);
+        return (x == null) ? defaultValue : x;
+    }
+
+    public static String getProperty(String key) {
+        return getProperty(key, null);
+    }
+
+    public static boolean getBooleanProperty(String key, boolean defaultValue) {
+        String x = System.getProperty(key);
+        return (x == null) ? defaultValue : Boolean.parseBoolean(x);
     }
 
 }
