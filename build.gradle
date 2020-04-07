@@ -1,4 +1,5 @@
 // Apply the java plugin to add support for Java
+apply plugin: 'java'
 apply plugin: 'application'
 
 // Compile Java.
@@ -18,6 +19,8 @@ project.ext {
     aspectjVersion = '1.8.10'
 }
 
+mainClassName = 'com.dotcms.upgrade.Upgrade'
+
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -30,6 +33,10 @@ dependencies {
     compile (group: 'com.dotcms', name: 'dotcms', version: '5.2.7'){
         transitive = false
     }
+
+    compile group: 'com.dotcms.lib', name: 'dot.hibernate', version:'2.1.7_3'
+
+    compile group: 'com.zaxxer', name: 'HikariCP', version:'3.4.2'
 
     compile (group: 'com.oracle.jdbc', name: 'ojdbc8', version: '19.3') {
         transitive = false
@@ -48,7 +55,13 @@ dependencies {
     }
     compile group: 'com.dotcms.lib', name: 'dot.google', version:'ukv_2'
     compile group: 'com.dotcms.lib', name: 'dot.guava', version:'11.0.1_2'
-    compile 'org.apache.logging.log4j:log4j-web:2.8.2'
+    compile group: 'io.vavr', name: 'vavr', version: '0.9.0'
+    compile 'com.github.ben-manes.caffeine:caffeine:2.4.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-jcl', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-web', version: '2.8.2'
     compile 'commons-logging:commons-logging:1.2'
     
     compile "org.mockito:mockito-core:1.+"

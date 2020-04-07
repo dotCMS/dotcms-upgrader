@@ -18,34 +18,31 @@ public class Upgrade {
     StartupTask getClazz(String input) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         int task = isArgANumber(input);
         return (StartupTask) Class.forName(input).newInstance();
-
-
     }
-
-
 
     public static void main(final String[] args) throws Exception {
 
-        InitService.init();
-        TaskUtil tasks = new TaskUtil();
-        System.out.println("Currently at db version:"  + tasks.getDBVersion());
-        
+        run("com.dotmarketing.startup.runonce.Task04230FixVanityURLInconsistencies");
+    }
 
+    public static void run(final String... args) throws Exception {
+
+        out.println("Doing Init the framework");
+        InitService.init();
+        out.println("Done Init the framework");
+
+        TaskUtil tasks = new TaskUtil();
+        try {
+            System.out.println("Currently at db version:" + tasks.getDBVersion());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         
         if (args.length > 0) {
 
-            
-            
-
             final String taskClass = args[0];
 
-
-
             out.println("Running the upgrade task: " + taskClass);
-
-            out.println("Doing Init the framework");
-
-            out.println("Done Init the framework");
 
             final StartupTask startupTask = (StartupTask) Class.forName(taskClass).newInstance();
 

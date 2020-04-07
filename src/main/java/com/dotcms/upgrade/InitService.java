@@ -54,10 +54,6 @@ public class InitService {
         for(Object key : properties.keySet()) {
             System.setProperty((String) key, properties.getProperty((String) key));
         }
-        
-
-
-
     }
 
 
