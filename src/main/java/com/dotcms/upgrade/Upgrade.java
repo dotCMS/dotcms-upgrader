@@ -44,10 +44,12 @@ public class Upgrade {
 
                 out.println( "The the upgrade task: " + taskClass + " not found");
             }
+            System.exit(0);
 
         } else {
 
-            throw new IllegalArgumentException("Must include the upgrade class name before as a parameter");
+            out.println("Must include the upgrade class name before as a parameter");
+            System.exit(1);
         }
     }
 }
